@@ -1,6 +1,6 @@
-# CHEFMATE - Aplikasi Katalog Resep Makanan
+# ChefMate - Aplikasi Katalog Resep Makanan
 
-## 🎬 TENTANG CHEFMATE
+## 🎬 TENTANG ChefMate
 **ChefMate** adalah aplikasi katalog resep makanan berbasis mobile yang dirancang untuk membantu pengguna dalam menemukan resep masakan. Aplikasi ini menampilkan beberapa jenis dan macam resep masakan dengan detail bahan-bahan dan cara memasaknya. Pengguna dapat mencari resep di kolom pencarian, mengelompokkan resep berdasarkan jenis makanan/minuman, serta menyimpan resep masakan favorite mereka. 
 
 ## 🎯 TEMA DAN TUJUAN APLIKASI
