@@ -9,8 +9,7 @@ Tujuan : Merancang dan mendesain antarmuka (GUI) aplikasi mobile menggunakan fra
 
 ## 📱 DAFTAR HALAMAN BESERTA FUNGSINYA
   1. HomeView (lib/view/home_view.dart)
-      Sebagai beranda aplikasi, menampilkan daftar makanan dan resep. Menerapkan fitur filter kategori dan pencarian Real-time melalui ViewModel.
-     --
+     Sebagai beranda aplikasi, menampilkan daftar makanan dan resep. Menerapkan fitur filter kategori dan pencarian Real-time melalui ViewModel.
      <img src='assets/images/readme/home.jpg' alt='Tampilan Home' width='270' height='600'>
   3. FavoriteView (lib/view/favorite_view.dart)
       Sebagai daftar favorite, menampilkan resep yang ditandai oleh user sebagai favorite.
