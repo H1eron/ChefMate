@@ -117,7 +117,6 @@ class DetailView extends StatelessWidget {
             style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 16),
-          // Durasi dan Porsi
           Row(
             children: [
               Icon(Icons.access_time, color: orangeColor, size: 20),
@@ -135,7 +134,6 @@ class DetailView extends StatelessWidget {
   }
 
   Widget _buildIngredientsList() {
-    // ... (Kode Daftar Bahan tetap sama)
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -177,7 +175,6 @@ class DetailView extends StatelessWidget {
     );
   }
 
-  // ✅ BARU: Method untuk merender Langkah-Langkah Memasak
   Widget _buildStepsList() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -193,7 +190,6 @@ class DetailView extends StatelessWidget {
             style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const Divider(color: Colors.grey, height: 20),
-          // Daftar Langkah-langkah
           ...recipe.steps.asMap().entries.map((entry) {
             int index = entry.key;
             String step = entry.value;
@@ -203,7 +199,7 @@ class DetailView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${index + 1}.", // Penomoran langkah
+                    "${index + 1}.",
                     style: const TextStyle(color: Color(0xFFE55800), fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 8),

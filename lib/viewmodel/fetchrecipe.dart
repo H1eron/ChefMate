@@ -1,5 +1,3 @@
-// lib/viewmodel/fetchrecipe.dart
-
 import 'package:flutter/material.dart';
 import '../models/recipe.dart';
 import '../services/recipe_service.dart';
@@ -11,19 +9,16 @@ class FetchRecipe with ChangeNotifier {
   List<Recipe> _recipes = [];
   bool _isLoading = false;
 
-  // State Logic
   String _activeCategory = "Semua";
   String _searchQuery = "";
   bool _isLoggedIn = false;
 
-  // States Autentikasi
   String? _userName;
   String? _userEmail;
   String? _userPassword;
   String? _photoUrl;
-  String? _phoneNumber; // ✅ State untuk Nomor Telepon
+  String? _phoneNumber;
 
-  // Getters
   bool get isLoggedIn => _isLoggedIn;
   String? get userName => _userName;
   String? get userEmail => _userEmail;
@@ -44,7 +39,6 @@ class FetchRecipe with ChangeNotifier {
     notifyListeners();
   }
 
-  // Logic Getter Resep
   List<Recipe> get favoriteRecipes {
     return _recipes
         .where((recipe) => _favoriteRecipeIds.contains(recipe.id))
@@ -89,8 +83,6 @@ class FetchRecipe with ChangeNotifier {
     notifyListeners();
   }
 
-  // ⭐️ LOGIC AUTENTIKASI SIMPLIFIED (SYNCHRONOUS) ⭐️
-
   void login(String email, String password) {
     if (email.isNotEmpty && password.isNotEmpty) {
       _isLoggedIn = true;
@@ -112,7 +104,7 @@ class FetchRecipe with ChangeNotifier {
     _userName = null;
     _userEmail = null;
     _photoUrl = null;
-    _phoneNumber = null; // ✅ Reset Nomor Telepon
+    _phoneNumber = null; //
     notifyListeners();
   }
 
@@ -129,8 +121,8 @@ class FetchRecipe with ChangeNotifier {
       _userName = fullName;
       _userEmail = email;
       _userPassword = password;
-      _phoneNumber = phoneNumber; // ✅ Menyimpan nilai input
-      _isLoggedIn = false; // TIDAK LANGSUNG LOGIN
+      _phoneNumber = phoneNumber; //
+      _isLoggedIn = false;
     } else {
       _isLoggedIn = false;
     }

@@ -1,5 +1,3 @@
-// lib/view/account_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/fetchrecipe.dart';
@@ -104,7 +102,6 @@ class AccountView extends StatelessWidget {
     );
   }
 
-  // Widget _buildProfileHeaderCard yang sudah disederhanakan (tanpa Stack dan Positioned)
   Widget _buildProfileHeaderCard(
     BuildContext context,
     String userName,
@@ -113,14 +110,12 @@ class AccountView extends StatelessWidget {
   ) {
     return Container(
       width: double.infinity,
-      // Padding atas disesuaikan untuk mengkompensasi hilangnya AppBar
       padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(color: darkCardColor),
       child: Center(
         child: Column(
           children: [
-            // FOTO PROFIL INTERAKTIF
             GestureDetector(
               onTap: () => _showChangePhotoDialog(context),
               child: CircleAvatar(
@@ -135,8 +130,6 @@ class AccountView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-
-            // USERNAME (Mengambil data dari ViewModel yang sudah di-register)
             Text(
               userName,
               style: const TextStyle(
@@ -164,7 +157,6 @@ class AccountView extends StatelessWidget {
             color: Colors.white54,
           ),
           onTap: () {
-            // Aksi ketika ListTile diklik
           },
         ),
         Divider(height: 1, color: Colors.grey[700], indent: 20, endIndent: 20),

@@ -33,7 +33,6 @@ class RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar dan Favorit
             Stack(
               children: [
                 ClipRRect(
@@ -61,7 +60,6 @@ class RecipeCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Detail Teks
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(

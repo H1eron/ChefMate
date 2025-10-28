@@ -52,7 +52,6 @@ class _HomeViewState extends State<HomeView> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Logic Loading
                   recipeProvider.isLoading
                       ? const Center(child: CircularProgressIndicator(color: Colors.orange))
                       : Column(

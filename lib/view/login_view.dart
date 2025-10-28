@@ -1,5 +1,3 @@
-// lib/view/login_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/fetchrecipe.dart';
