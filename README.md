@@ -5,7 +5,7 @@
 
 ## 🎯 TEMA DAN TUJUAN APLIKASI
 Tema : Katalog Resep Masakan
-Tujuan : Merancang dan mendesain antarmuka (GUI) aplikasi mobile menggunakan framework flutter dengan menerapkan konsep layout, widget, navigasi antar halaman, dan arsitektur NVVM (Navigator-View-ViewModel-Model).
+Tujuan : Merancang dan mendesain antarmuka (GUI) aplikasi mobile menggunakan framework flutter dengan menerapkan konsep layout, widget, navigasi antar halaman, dan arsitektur MVVM (Model-View-ViewModel).
 
 ## 📱 DAFTAR HALAMAN BESERTA FUNGSINYA
   1. HomeView (lib/view/home_view.dart)
