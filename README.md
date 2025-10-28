@@ -1,28 +1,38 @@
-# CHEFMATE - Aplikasi Katalog Resep Makanan
+# ChefMate - Aplikasi Katalog Resep Makanan
 
-## 🎬 TENTANG CHEFMATE
+## 🎬 TENTANG ChefMate
 **ChefMate** adalah aplikasi katalog resep makanan berbasis mobile yang dirancang untuk membantu pengguna dalam menemukan resep masakan. Aplikasi ini menampilkan beberapa jenis dan macam resep masakan dengan detail bahan-bahan dan cara memasaknya. Pengguna dapat mencari resep di kolom pencarian, mengelompokkan resep berdasarkan jenis makanan/minuman, serta menyimpan resep masakan favorite mereka. 
 
 ## 🎯 TEMA DAN TUJUAN APLIKASI
 Tema : Katalog Resep Masakan
-Tujuan : Merancang dan mendesain antarmuka (GUI) aplikasi mobile menggunakan framework flutter dengan menerapkan konsep layout, widget, navigasi antar halaman, dan arsitektur NVVM (Navigator-View-ViewModel-Model).
+Tujuan : Merancang dan mendesain antarmuka (GUI) aplikasi mobile menggunakan framework flutter dengan menerapkan konsep layout, widget, navigasi antar halaman, dan arsitektur MVVM (Model-View-ViewModel).
 
 ## 📱 DAFTAR HALAMAN BESERTA FUNGSINYA
   1. HomeView (lib/view/home_view.dart)
-      Sebagai beranda aplikasi, menampilkan daftar makanan dan resep. Menerapkan fitur filter kategori dan pencarian Real-time melalui ViewModel.
-       - <img src='assets/images/readme/home.jpg' alt='Tampilan Home' width='270' height='480'>
-  2. FavoriteView (lib/view/favorite_view.dart)
-      Sebagai daftar favorite, menampilkan resep yang ditandai oleh user sebagai favorite.
-       - <img src='assets/images/readme/favorite.jpg' alt='Tampilan Favorite' width='270' height='480'>
-  3. DetailView (lib/view/detail_view.dart)
-      Menampilkan informasi lengkap resep (bahan dan langkah memasak).
-       - <img src='assets/images/readme/detail.jpg' alt='Tampilan Detail' width='270' height='480'>
-  4. Login/Register (lib/view/login_view.dart)
-      Berfungsi sebagai tempat registrasi dan login untuk pengguna.
-       - <img src='assets/images/readme/register-login.jpg' alt='Tampilan Login/Register' width='270' height='480'>
-  5. AccountView (lib/view/account_view.dart)
-      Halaman profile pengguna yang menampilkan detail profile seperti username, email, dan nomor telepon yang terdaftar saat registrasi.
-       - <img src='assets/images/readme/account.jpg' alt='Tampilan Account' width='270' height='480'>
+
+     Sebagai beranda aplikasi, menampilkan daftar makanan dan resep. Menerapkan fitur filter kategori dan pencarian Real-time melalui ViewModel.
+
+     <img src='assets/images/readme/home.jpg' alt='Tampilan Home' width='270' height='600'>
+  3. FavoriteView (lib/view/favorite_view.dart)
+
+     Sebagai daftar favorite, menampilkan resep yang ditandai oleh user sebagai favorite.
+     
+     <img src='assets/images/readme/favorite.jpg' alt='Tampilan Favorite' width='270' height='600'>
+  5. DetailView (lib/view/detail_view.dart)
+
+     Menampilkan informasi lengkap resep (bahan dan langkah memasak).
+     
+     <img src='assets/images/readme/detail.jpg' alt='Tampilan Detail' width='270' height='600'>
+  7. Login/Register (lib/view/login_view.dart)
+
+     Berfungsi sebagai tempat registrasi dan login untuk pengguna.
+     
+     <img src='assets/images/readme/register-login.jpg' alt='Tampilan Login/Register' width='270' height='600'>
+  9. AccountView (lib/view/account_view.dart)
+
+     Halaman profile pengguna yang menampilkan detail profile seperti username, email, dan nomor telepon yang terdaftar saat registrasi.
+     
+     <img src='assets/images/readme/account.jpg' alt='Tampilan Account' width='270' height='600'>
 
 ## 🧭 PANDUAN PENGGUNAAN APLIKASI
   1. Memulai Sesi (Login/Registrasi)
