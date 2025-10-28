@@ -14,20 +14,24 @@ Tujuan : Merancang dan mendesain antarmuka (GUI) aplikasi mobile menggunakan fra
 
      <img src='assets/images/readme/home.jpg' alt='Tampilan Home' width='270' height='600'>
   3. FavoriteView (lib/view/favorite_view.dart)
+
      Sebagai daftar favorite, menampilkan resep yang ditandai oleh user sebagai favorite.
      
      <img src='assets/images/readme/favorite.jpg' alt='Tampilan Favorite' width='270' height='600'>
   5. DetailView (lib/view/detail_view.dart)
-      Menampilkan informasi lengkap resep (bahan dan langkah memasak).
-     --
+
+     Menampilkan informasi lengkap resep (bahan dan langkah memasak).
+     
      <img src='assets/images/readme/detail.jpg' alt='Tampilan Detail' width='270' height='600'>
   7. Login/Register (lib/view/login_view.dart)
-      Berfungsi sebagai tempat registrasi dan login untuk pengguna.
-     --
+
+     Berfungsi sebagai tempat registrasi dan login untuk pengguna.
+     
      <img src='assets/images/readme/register-login.jpg' alt='Tampilan Login/Register' width='270' height='600'>
   9. AccountView (lib/view/account_view.dart)
-      Halaman profile pengguna yang menampilkan detail profile seperti username, email, dan nomor telepon yang terdaftar saat registrasi.
-     --
+
+     Halaman profile pengguna yang menampilkan detail profile seperti username, email, dan nomor telepon yang terdaftar saat registrasi.
+     
      <img src='assets/images/readme/account.jpg' alt='Tampilan Account' width='270' height='600'>
 
 ## 🧭 PANDUAN PENGGUNAAN APLIKASI
