@@ -3,12 +3,16 @@ import '../models/recipe.dart';
 import '../services/recipe_service.dart';
 
 class FetchRecipe with ChangeNotifier {
-  final Set<int> _favoriteRecipeIds = {};
+  // Ganti Set<int> menjadi Set<String> untuk menyimpan key resep
+  final Set<String> _favoriteRecipeIds = {}; 
   final RecipeService _recipeService = RecipeService();
 
   List<Recipe> _recipes = [];
   bool _isLoading = false;
-
+  
+  // Cache untuk menyimpan detail resep yang sudah dimuat agar tidak perlu memanggil API berulang kali
+  final Map<String, Recipe> _recipeDetailsCache = {}; 
+  
   String _activeCategory = "Semua";
   String _searchQuery = "";
   bool _isLoggedIn = false;
@@ -34,22 +38,84 @@ class FetchRecipe with ChangeNotifier {
   Future<void> loadRecipes() async {
     _isLoading = true;
     notifyListeners();
-    _recipes = await _recipeService.fetchRecipes();
+    
+    try {
+      _recipes = await _recipeService.fetchRecipes();
+      // Pastikan resep yang sudah ada di cache juga diperbarui jika ada yang terlewat dari fetch awal
+      _recipes.forEach((recipe) {
+        if (_recipeDetailsCache.containsKey(recipe.key)) {
+          // Hanya update data dasar (title, times, etc.)
+          _recipeDetailsCache[recipe.key] = recipe.copyWithDetail({}); 
+        }
+      });
+      
+    } catch (e) {
+      // Biarkan _recipes kosong jika gagal memuat, tampilan akan menunjukkan loading error
+      _recipes = []; 
+    }
+    
     _isLoading = false;
     notifyListeners();
   }
 
+  // Mengambil detail resep dari cache atau API
+  Future<Recipe> getRecipeWithDetails(String key) async {
+    // 1. Cek cache
+    if (_recipeDetailsCache.containsKey(key)) {
+      return _recipeDetailsCache[key]!;
+    }
+    
+    // 2. Cari data dasar dari list _recipes
+    // Gunakan find atau cari dummy/base jika tidak ada di list (seharusnya ada)
+    Recipe? baseRecipe;
+    try {
+      baseRecipe = _recipes.firstWhere((r) => r.key == key);
+    } catch (e) {
+       // Buat resep minimal jika tidak ditemukan di list (kasus aneh, tapi aman)
+       baseRecipe = Recipe(
+        key: key, 
+        title: 'Memuat Detail...', 
+        imageUrl: 'https://via.placeholder.com/150',
+        duration: 'N/A', 
+        servings: 'N/A', 
+        difficulty: 'N/A',
+      );
+    }
+
+    // 3. Ambil detail dari API
+    try {
+      final detailJson = await _recipeService.fetchRecipeDetails(key);
+      final detailedRecipe = baseRecipe.copyWithDetail(detailJson);
+      
+      // Simpan ke cache
+      _recipeDetailsCache[key] = detailedRecipe; 
+      
+      // Notify listener agar detail view bisa rebuild dengan data baru
+      notifyListeners(); 
+
+      return detailedRecipe;
+
+    } catch (e) {
+      // Jika gagal memuat detail, kembalikan data dasar yang ada
+      return baseRecipe; 
+    }
+  }
+
+
   List<Recipe> get favoriteRecipes {
     return _recipes
-        .where((recipe) => _favoriteRecipeIds.contains(recipe.id))
+        .where((recipe) => _favoriteRecipeIds.contains(recipe.key))
         .toList();
   }
 
+  // Mengubah tipe filter: sekarang hanya mencari 'difficulty' karena kategori dari API tidak sesuai
   List<Recipe> get recipes {
     Iterable<Recipe> filteredRecipes = _recipes;
     if (_activeCategory != "Semua") {
+      // Kita coba filter berdasarkan kata kunci dari kategori di UI (Misal: "Berkuah" di search title, atau "Mudah" di difficulty)
+      final filterQuery = _activeCategory.toLowerCase();
       filteredRecipes = filteredRecipes.where(
-        (r) => r.category == _activeCategory,
+        (r) => r.difficulty.toLowerCase().contains(filterQuery) || r.title.toLowerCase().contains(filterQuery),
       );
     }
     if (_searchQuery.isNotEmpty) {
@@ -70,15 +136,17 @@ class FetchRecipe with ChangeNotifier {
     notifyListeners();
   }
 
-  bool isFavorite(int id) {
-    return _favoriteRecipeIds.contains(id);
+  // Gunakan key (String)
+  bool isFavorite(String key) {
+    return _favoriteRecipeIds.contains(key);
   }
 
-  void toggleFavorite(int id) {
-    if (_favoriteRecipeIds.contains(id)) {
-      _favoriteRecipeIds.remove(id);
+  // Gunakan key (String)
+  void toggleFavorite(String key) {
+    if (_favoriteRecipeIds.contains(key)) {
+      _favoriteRecipeIds.remove(key);
     } else {
-      _favoriteRecipeIds.add(id);
+      _favoriteRecipeIds.add(key);
     }
     notifyListeners();
   }
@@ -104,7 +172,7 @@ class FetchRecipe with ChangeNotifier {
     _userName = null;
     _userEmail = null;
     _photoUrl = null;
-    _phoneNumber = null; //
+    _phoneNumber = null; 
     notifyListeners();
   }
 
@@ -121,7 +189,7 @@ class FetchRecipe with ChangeNotifier {
       _userName = fullName;
       _userEmail = email;
       _userPassword = password;
-      _phoneNumber = phoneNumber; //
+      _phoneNumber = phoneNumber; 
       _isLoggedIn = false;
     } else {
       _isLoggedIn = false;

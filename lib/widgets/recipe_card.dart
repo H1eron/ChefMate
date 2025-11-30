@@ -15,7 +15,8 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isFav = viewmodel.isFavorite(recipe.id);
+    // Gunakan key (String) untuk favorit
+    bool isFav = viewmodel.isFavorite(recipe.key); 
 
     return GestureDetector(
       onTap: () {
@@ -40,18 +41,43 @@ class RecipeCard extends StatelessWidget {
                     topLeft: Radius.circular(15),
                     topRight: Radius.circular(15),
                   ),
-                  child: Image.asset(
+                  // Ganti Image.asset ke Image.network untuk URL dari API
+                  child: Image.network(
                     recipe.imageUrl,
                     height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    // Tambahkan builder untuk loading dan error
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 200, 
+                        width: double.infinity,
+                        color: const Color(0xFF2C2C2C),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: const Color(0xFFE55800),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 200, 
+                      width: double.infinity,
+                      color: const Color(0xFF2C2C2C),
+                      child: const Center(child: Icon(Icons.image_not_supported, color: Colors.grey, size: 50)),
+                    ),
                   ),
                 ),
                 Positioned(
                   top: 10,
                   right: 10,
                   child: GestureDetector(
-                    onTap: () => viewmodel.toggleFavorite(recipe.id),
+                    // Gunakan key (String)
+                    onTap: () => viewmodel.toggleFavorite(recipe.key), 
                     child: Icon(
                       isFav ? Icons.favorite : Icons.favorite_border,
                       color: Colors.white,

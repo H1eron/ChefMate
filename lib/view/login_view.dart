@@ -22,7 +22,7 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _phoneNumberController =
-      TextEditingController(); // ✅ Controller Nomor Telepon
+      TextEditingController();
 
   final orangeColor = const Color(0xFFE55800);
   bool _isLoginMode = true;
