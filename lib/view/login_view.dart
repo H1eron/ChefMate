@@ -26,6 +26,7 @@ class _LoginViewState extends State<LoginView> {
 
   final orangeColor = const Color(0xFFE55800);
   bool _isLoginMode = true;
+  bool _isProcessing = false; // State untuk loading button
 
   @override
   void initState() {
@@ -50,7 +51,7 @@ class _LoginViewState extends State<LoginView> {
     _registerEmailController.dispose();
     _registerPasswordController.dispose();
     _confirmPasswordController.dispose();
-    _phoneNumberController.dispose(); // ✅ Dispose Controller Nomor Telepon
+    _phoneNumberController.dispose();
     super.dispose();
   }
 
@@ -63,6 +64,7 @@ class _LoginViewState extends State<LoginView> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1B1B1B), // Tambahkan latar belakang gelap
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -96,54 +98,82 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  // MARK: - Core Logic (Synchronous)
+  // MARK: - Core Logic (Async with Firebase)
 
-  void _performLogin(BuildContext context, FetchRecipe viewmodel) {
-    final email = _emailController.text;
-    final password = _passwordController.text;
-
-    viewmodel.login(email, password);
-
-    if (!viewmodel.isLoggedIn) {
+  void _showSnackbar(String message) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login Gagal. Email/Password kosong.')),
+        SnackBar(content: Text(message)),
       );
     }
   }
 
-  void _performRegister(BuildContext context, FetchRecipe viewmodel) {
-    if (_registerPasswordController.text.length >= 6) {
-      // ✅ Panggilan register dengan 4 parameter
-      viewmodel.register(
-        _nameController.text,
-        _registerEmailController.text,
-        _registerPasswordController.text,
-        _phoneNumberController.text,
-      );
+  Future<void> _performLogin(BuildContext context, FetchRecipe viewmodel) async {
+    setState(() => _isProcessing = true);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-      if (!viewmodel.isLoggedIn) {
-        _emailController.text = _registerEmailController.text;
-        _nameController.clear();
-        _registerEmailController.clear();
-        _registerPasswordController.clear();
-        _confirmPasswordController.clear();
-        _phoneNumberController.clear();
+    if (email.isEmpty || password.isEmpty) {
+      _showSnackbar('Email dan Password tidak boleh kosong.');
+      setState(() => _isProcessing = false);
+      return;
+    }
 
-        setState(() {
-          _isLoginMode = true;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registrasi Berhasil! Silakan Masuk.')),
-        );
-      }
-      setState(() {});
+    final errorMessage = await viewmodel.login(email, password);
+    
+    if (errorMessage == null) {
+      // Sukses, navigasi ditangani oleh listener di FetchRecipe
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registrasi Gagal: Password harus minimal 6 karakter.'),
-        ),
-      );
+      _showSnackbar('Login Gagal: $errorMessage');
+    }
+    setState(() => _isProcessing = false);
+  }
+
+  Future<void> _performRegister(BuildContext context, FetchRecipe viewmodel) async {
+    setState(() => _isProcessing = true);
+    
+    final name = _nameController.text.trim();
+    final email = _registerEmailController.text.trim();
+    final password = _registerPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+    final phoneNumber = _phoneNumberController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      _showSnackbar('Semua field wajib diisi.');
+      setState(() => _isProcessing = false);
+      return;
+    }
+    if (password.length < 6) {
+      _showSnackbar('Password harus minimal 6 karakter.');
+      setState(() => _isProcessing = false);
+      return;
+    }
+    if (password != confirmPassword) {
+      _showSnackbar('Konfirmasi password tidak cocok.');
+      setState(() => _isProcessing = false);
+      return;
+    }
+
+    final errorMessage = await viewmodel.register(name, email, password, phoneNumber);
+
+    if (errorMessage == null) {
+      _emailController.text = email;
+      _showSnackbar('Registrasi Berhasil! Silakan Masuk.');
+      
+      // Bersihkan field dan pindah ke mode login
+      _nameController.clear();
+      _registerEmailController.clear();
+      _registerPasswordController.clear();
+      _confirmPasswordController.clear();
+      _phoneNumberController.clear();
+
+      setState(() {
+        _isLoginMode = true;
+        _isProcessing = false;
+      });
+    } else {
+      _showSnackbar('Registrasi Gagal: $errorMessage');
+      setState(() => _isProcessing = false);
     }
   }
 
@@ -237,7 +267,7 @@ class _LoginViewState extends State<LoginView> {
         const SizedBox(height: 30),
 
         ElevatedButton(
-          onPressed: () {
+          onPressed: _isProcessing ? null : () {
             _performLogin(context, viewmodel);
           },
           style: ElevatedButton.styleFrom(
@@ -246,11 +276,21 @@ class _LoginViewState extends State<LoginView> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
+            disabledBackgroundColor: orangeColor.withOpacity(0.5), // Efek loading
           ),
-          child: const Text(
-            "Masuk",
-            style: TextStyle(fontSize: 18, color: Colors.white),
-          ),
+          child: _isProcessing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  ),
+                )
+              : const Text(
+                  "Masuk",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -320,7 +360,7 @@ class _LoginViewState extends State<LoginView> {
           "Nomor Telepon",
           "Masukkan nomor telepon",
           Icons.phone,
-        ), // ✅ Field Nomor Telepon
+        ), 
         const SizedBox(height: 16),
         _buildAuthInput(
           _registerPasswordController,
@@ -340,7 +380,7 @@ class _LoginViewState extends State<LoginView> {
         const SizedBox(height: 30),
 
         ElevatedButton(
-          onPressed: () {
+          onPressed: _isProcessing ? null : () {
             _performRegister(context, viewmodel);
           },
           style: ElevatedButton.styleFrom(
@@ -349,11 +389,21 @@ class _LoginViewState extends State<LoginView> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
+            disabledBackgroundColor: orangeColor.withOpacity(0.5),
           ),
-          child: const Text(
-            "Daftar Sekarang",
-            style: TextStyle(fontSize: 18, color: Colors.white),
-          ),
+          child: _isProcessing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  ),
+                )
+              : const Text(
+                  "Daftar Sekarang",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -398,7 +448,7 @@ class _LoginViewState extends State<LoginView> {
   Widget _buildAuthTab(String title, bool isActive, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
-        onTap: onTap,
+        onTap: isActive ? () {} : onTap, // Hanya aktifkan onTap jika mode berubah
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(

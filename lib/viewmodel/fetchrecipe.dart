@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Diperlukan untuk Firebase Auth
 import '../models/recipe.dart';
 import '../services/recipe_service.dart';
 
 class FetchRecipe with ChangeNotifier {
   final RecipeService _recipeService = RecipeService();
-  
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Instance Firebase Auth
+
   // Recipe State
   List<Recipe> _recipes = []; 
   bool _isLoading = false;
   String _activeCategory = 'Semua';
   String _searchQuery = '';
   
-  // Auth/User State (Dummy Implementation)
-  bool _isLoggedIn = false;
-  String? _userEmail;
+  // Auth/User State
+  // Gunakan User? dari Firebase untuk menentukan status login
+  User? _currentUser; 
   String? _userName;
   String? _phoneNumber;
   String? _photoUrl; 
   
   // Favorite State
   final Map<String, Recipe> _favoriteRecipes = {}; 
+
+  FetchRecipe() {
+    // Memantau perubahan status autentikasi dari Firebase
+    _auth.authStateChanges().listen((User? user) {
+      _currentUser = user;
+      _updateUserState(user); // Memperbarui state lokal
+      notifyListeners();
+    });
+  }
   
   // MARK: - Getters
 
@@ -27,9 +38,11 @@ class FetchRecipe with ChangeNotifier {
   String get activeCategory => _activeCategory;
   
   // Auth Getters
-  bool get isLoggedIn => _isLoggedIn;
-  String? get userEmail => _userEmail;
-  String? get userName => _userName;
+  // Status login ditentukan dari keberadaan _currentUser
+  bool get isLoggedIn => _currentUser != null;
+  String? get userEmail => _currentUser?.email;
+  // Gunakan _userName lokal, karena Firebase hanya menyediakan displayName (yang mungkin kosong)
+  String? get userName => _userName ?? _currentUser?.displayName ?? 'Pengguna';
   String? get phoneNumber => _phoneNumber;
   String? get photoUrl => _photoUrl; 
   
@@ -42,7 +55,6 @@ class FetchRecipe with ChangeNotifier {
       return _recipes;
     }
     
-    // Melakukan filter judul secara lokal 
     return _recipes.where((recipe) {
       final titleLower = recipe.title.toLowerCase();
       final searchLower = _searchQuery.toLowerCase();
@@ -50,50 +62,83 @@ class FetchRecipe with ChangeNotifier {
     }).toList();
   }
   
-  // MARK: - Auth Methods (Dummy Logic)
+  // MARK: - Internal User State Update
 
-  void login(String email, String password) {
-    if (email.isNotEmpty && password.length >= 6) {
-      _isLoggedIn = true;
-      _userEmail = email;
-      _userName = 'Chef $email'; 
-      _phoneNumber = '081234567890';
+  // Memperbarui state lokal (misalnya _userName, _phoneNumber) saat status auth berubah
+  void _updateUserState(User? user) {
+    if (user != null) {
+      // Di sini Anda bisa mengambil data profil tambahan dari Firestore/Database 
+      // (asumsi: saat register, Anda menyimpan nama/phone ke Firestore)
+      // Untuk tujuan UAS, kita akan gunakan nilai default/dummy yang disimpan sebelumnya
+      _userName = user.displayName ?? 'Pengguna Baru'; // Gunakan displayName dari Firebase jika ada
+      _phoneNumber = user.phoneNumber ?? 'Belum Diatur'; 
+      _photoUrl = user.photoURL;
     } else {
-      _isLoggedIn = false;
+      _userName = null;
+      _phoneNumber = null;
+      _photoUrl = null;
     }
-    notifyListeners();
   }
 
-  void register(String name, String email, String password, String phoneNumber) {
-    if (password.length >= 6) {
-      _isLoggedIn = true; 
-      _userEmail = email;
+  // MARK: - Firebase Auth Methods
+
+  Future<String?> login(String email, String password) async {
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      // Login berhasil, state akan diupdate oleh authStateChanges listener
+      return null; // Return null menandakan sukses
+    } on FirebaseAuthException catch (e) {
+      // Handle error spesifik dari Firebase
+      return e.message;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> register(String name, String email, String password, String phoneNumber) async {
+    try {
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      // Update display name (nama pengguna) di Firebase
+      await userCredential.user?.updateDisplayName(name);
+
+      // Catatan: Menyimpan nomor telepon di Firebase Auth memerlukan verifikasi SMS.
+      // Untuk memenuhi UAS, kita hanya menyimpan nama dan email di Auth.
+      // Jika Anda perlu menyimpan phone number, Anda harus menggunakan Firestore/Realtime DB.
+      
       _userName = name;
       _phoneNumber = phoneNumber;
+      _currentUser = userCredential.user; // Update state
+      notifyListeners();
+      return null; // Return null menandakan sukses
+    } on FirebaseAuthException catch (e) {
+      return e.message;
+    } catch (e) {
+      return e.toString();
     }
-    notifyListeners();
   }
 
-  void logout() {
-    _isLoggedIn = false;
-    _userEmail = null;
-    _userName = null;
-    _phoneNumber = null;
-    notifyListeners();
+  Future<void> logout() async {
+    await _auth.signOut();
+    // Logout berhasil, state akan diupdate oleh authStateChanges listener
   }
 
-  // MARK: - Favorite Methods
+  // MARK: - Favorite Methods (Tetap sama)
 
   void toggleFavorite(String key) {
     if (isFavorite(key)) {
       _favoriteRecipes.remove(key);
     } else {
       Recipe? recipeToAdd;
-      // Coba cari di list resep saat ini
       try {
         recipeToAdd = _recipes.firstWhere((r) => r.key == key);
       } catch (_) {
-        // Jika tidak ditemukan, abaikan atau gunakan objek minimal
         debugPrint('Recipe minimal not found in current list for key: $key');
         return; 
       }
@@ -102,14 +147,13 @@ class FetchRecipe with ChangeNotifier {
     notifyListeners();
   }
   
-  // MARK: - Recipe API Methods
+  // MARK: - Recipe API Methods (Tetap sama)
 
   Future<void> loadRecipes() async {
     _isLoading = true;
     notifyListeners();
     
     try {
-      // Panggil API dengan kategori aktif, yang kini menangani logika gabungan untuk 'Semua'
       _recipes = await _recipeService.fetchRecipesByQuery(_activeCategory);
     } catch (e) {
       debugPrint('Error loading recipes for $_activeCategory: $e');
@@ -125,7 +169,6 @@ class FetchRecipe with ChangeNotifier {
     
     _activeCategory = category;
     _searchQuery = ''; 
-    // Memuat data baru dari API berdasarkan kategori yang dipilih
     loadRecipes(); 
   }
 
@@ -134,11 +177,9 @@ class FetchRecipe with ChangeNotifier {
     notifyListeners(); 
   }
 
-  // Fungsi Detail Loader
   Future<Recipe> getRecipeWithDetails(String key) async {
     Recipe minimalRecipe;
     
-    // 1. Dapatkan objek resep minimal (dari list yang sedang tampil atau favorit)
     try {
       minimalRecipe = _recipes.firstWhere((r) => r.key == key);
     } catch (_) {
@@ -149,10 +190,8 @@ class FetchRecipe with ChangeNotifier {
       }
     }
     
-    // 2. Fetch detail lengkap dari API
     final detailJson = await _recipeService.fetchRecipeDetails(key);
     
-    // 3. Return objek resep yang diperbarui
     return minimalRecipe.copyWithDetail(detailJson);
   }
 }

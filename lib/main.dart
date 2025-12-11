@@ -4,11 +4,14 @@ import 'view/home_view.dart';
 import 'view/favorite_view.dart';
 import 'view/login_view.dart';
 import 'viewmodel/fetchrecipe.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(
     ChangeNotifierProvider(
-      create: (context) => FetchRecipe(), 
+      create: (context) => FetchRecipe(),
       child: const RecipeApp(),
     ),
   );
