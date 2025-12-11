@@ -3,197 +3,156 @@ import '../models/recipe.dart';
 import '../services/recipe_service.dart';
 
 class FetchRecipe with ChangeNotifier {
-  // Ganti Set<int> menjadi Set<String> untuk menyimpan key resep
-  final Set<String> _favoriteRecipeIds = {}; 
   final RecipeService _recipeService = RecipeService();
-
-  List<Recipe> _recipes = [];
+  
+  // Recipe State
+  List<Recipe> _recipes = []; 
   bool _isLoading = false;
+  String _activeCategory = 'Semua';
+  String _searchQuery = '';
   
-  // Cache untuk menyimpan detail resep yang sudah dimuat agar tidak perlu memanggil API berulang kali
-  final Map<String, Recipe> _recipeDetailsCache = {}; 
-  
-  String _activeCategory = "Semua";
-  String _searchQuery = "";
+  // Auth/User State (Dummy Implementation)
   bool _isLoggedIn = false;
-
-  String? _userName;
   String? _userEmail;
-  String? _userPassword;
-  String? _photoUrl;
+  String? _userName;
   String? _phoneNumber;
+  String? _photoUrl; 
+  
+  // Favorite State
+  final Map<String, Recipe> _favoriteRecipes = {}; 
+  
+  // MARK: - Getters
 
-  bool get isLoggedIn => _isLoggedIn;
-  String? get userName => _userName;
-  String? get userEmail => _userEmail;
-  String? get phoneNumber => _phoneNumber;
-  String get activeCategory => _activeCategory;
   bool get isLoading => _isLoading;
-  String? get photoUrl => null;
+  String get activeCategory => _activeCategory;
+  
+  // Auth Getters
+  bool get isLoggedIn => _isLoggedIn;
+  String? get userEmail => _userEmail;
+  String? get userName => _userName;
+  String? get phoneNumber => _phoneNumber;
+  String? get photoUrl => _photoUrl; 
+  
+  // Favorite Getters
+  List<Recipe> get favoriteRecipes => _favoriteRecipes.values.toList();
+  bool isFavorite(String key) => _favoriteRecipes.containsKey(key);
 
-  FetchRecipe() {
-    loadRecipes();
-  }
-
-  Future<void> loadRecipes() async {
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      _recipes = await _recipeService.fetchRecipes();
-      // Pastikan resep yang sudah ada di cache juga diperbarui jika ada yang terlewat dari fetch awal
-      _recipes.forEach((recipe) {
-        if (_recipeDetailsCache.containsKey(recipe.key)) {
-          // Hanya update data dasar (title, times, etc.)
-          _recipeDetailsCache[recipe.key] = recipe.copyWithDetail({}); 
-        }
-      });
-      
-    } catch (e) {
-      // Biarkan _recipes kosong jika gagal memuat, tampilan akan menunjukkan loading error
-      _recipes = []; 
-    }
-    
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  // Mengambil detail resep dari cache atau API
-  Future<Recipe> getRecipeWithDetails(String key) async {
-    // 1. Cek cache
-    if (_recipeDetailsCache.containsKey(key)) {
-      return _recipeDetailsCache[key]!;
-    }
-    
-    // 2. Cari data dasar dari list _recipes
-    // Gunakan find atau cari dummy/base jika tidak ada di list (seharusnya ada)
-    Recipe? baseRecipe;
-    try {
-      baseRecipe = _recipes.firstWhere((r) => r.key == key);
-    } catch (e) {
-       // Buat resep minimal jika tidak ditemukan di list (kasus aneh, tapi aman)
-       baseRecipe = Recipe(
-        key: key, 
-        title: 'Memuat Detail...', 
-        imageUrl: 'https://via.placeholder.com/150',
-        duration: 'N/A', 
-        servings: 'N/A', 
-        difficulty: 'N/A',
-      );
-    }
-
-    // 3. Ambil detail dari API
-    try {
-      final detailJson = await _recipeService.fetchRecipeDetails(key);
-      final detailedRecipe = baseRecipe.copyWithDetail(detailJson);
-      
-      // Simpan ke cache
-      _recipeDetailsCache[key] = detailedRecipe; 
-      
-      // Notify listener agar detail view bisa rebuild dengan data baru
-      notifyListeners(); 
-
-      return detailedRecipe;
-
-    } catch (e) {
-      // Jika gagal memuat detail, kembalikan data dasar yang ada
-      return baseRecipe; 
-    }
-  }
-
-
-  List<Recipe> get favoriteRecipes {
-    return _recipes
-        .where((recipe) => _favoriteRecipeIds.contains(recipe.key))
-        .toList();
-  }
-
-  // Mengubah tipe filter: sekarang hanya mencari 'difficulty' karena kategori dari API tidak sesuai
   List<Recipe> get recipes {
-    Iterable<Recipe> filteredRecipes = _recipes;
-    if (_activeCategory != "Semua") {
-      // Kita coba filter berdasarkan kata kunci dari kategori di UI (Misal: "Berkuah" di search title, atau "Mudah" di difficulty)
-      final filterQuery = _activeCategory.toLowerCase();
-      filteredRecipes = filteredRecipes.where(
-        (r) => r.difficulty.toLowerCase().contains(filterQuery) || r.title.toLowerCase().contains(filterQuery),
-      );
+    if (_searchQuery.isEmpty) {
+      return _recipes;
     }
-    if (_searchQuery.isNotEmpty) {
-      filteredRecipes = filteredRecipes.where(
-        (r) => r.title.toLowerCase().contains(_searchQuery),
-      );
-    }
-    return filteredRecipes.toList();
+    
+    // Melakukan filter judul secara lokal 
+    return _recipes.where((recipe) {
+      final titleLower = recipe.title.toLowerCase();
+      final searchLower = _searchQuery.toLowerCase();
+      return titleLower.contains(searchLower);
+    }).toList();
   }
-
-  void setCategory(String category) {
-    _activeCategory = category;
-    notifyListeners();
-  }
-
-  void setSearchQuery(String query) {
-    _searchQuery = query.toLowerCase();
-    notifyListeners();
-  }
-
-  // Gunakan key (String)
-  bool isFavorite(String key) {
-    return _favoriteRecipeIds.contains(key);
-  }
-
-  // Gunakan key (String)
-  void toggleFavorite(String key) {
-    if (_favoriteRecipeIds.contains(key)) {
-      _favoriteRecipeIds.remove(key);
-    } else {
-      _favoriteRecipeIds.add(key);
-    }
-    notifyListeners();
-  }
+  
+  // MARK: - Auth Methods (Dummy Logic)
 
   void login(String email, String password) {
-    if (email.isNotEmpty && password.isNotEmpty) {
+    if (email.isNotEmpty && password.length >= 6) {
       _isLoggedIn = true;
-
-      if (_userName == null || _userName!.isEmpty) {
-        _userName = "Pengguna Aktif";
-      }
       _userEmail = email;
+      _userName = 'Chef $email'; 
+      _phoneNumber = '081234567890';
     } else {
       _isLoggedIn = false;
-      _userName = null;
-      _userEmail = null;
+    }
+    notifyListeners();
+  }
+
+  void register(String name, String email, String password, String phoneNumber) {
+    if (password.length >= 6) {
+      _isLoggedIn = true; 
+      _userEmail = email;
+      _userName = name;
+      _phoneNumber = phoneNumber;
     }
     notifyListeners();
   }
 
   void logout() {
     _isLoggedIn = false;
-    _userName = null;
     _userEmail = null;
-    _photoUrl = null;
-    _phoneNumber = null; 
+    _userName = null;
+    _phoneNumber = null;
     notifyListeners();
   }
 
-  void register(
-    String fullName,
-    String email,
-    String password,
-    String phoneNumber,
-  ) {
-    if (fullName.isNotEmpty &&
-        email.isNotEmpty &&
-        password.isNotEmpty &&
-        phoneNumber.isNotEmpty) {
-      _userName = fullName;
-      _userEmail = email;
-      _userPassword = password;
-      _phoneNumber = phoneNumber; 
-      _isLoggedIn = false;
+  // MARK: - Favorite Methods
+
+  void toggleFavorite(String key) {
+    if (isFavorite(key)) {
+      _favoriteRecipes.remove(key);
     } else {
-      _isLoggedIn = false;
+      Recipe? recipeToAdd;
+      // Coba cari di list resep saat ini
+      try {
+        recipeToAdd = _recipes.firstWhere((r) => r.key == key);
+      } catch (_) {
+        // Jika tidak ditemukan, abaikan atau gunakan objek minimal
+        debugPrint('Recipe minimal not found in current list for key: $key');
+        return; 
+      }
+      _favoriteRecipes[key] = recipeToAdd;
     }
     notifyListeners();
+  }
+  
+  // MARK: - Recipe API Methods
+
+  Future<void> loadRecipes() async {
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      // Panggil API dengan kategori aktif, yang kini menangani logika gabungan untuk 'Semua'
+      _recipes = await _recipeService.fetchRecipesByQuery(_activeCategory);
+    } catch (e) {
+      debugPrint('Error loading recipes for $_activeCategory: $e');
+      _recipes = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void setCategory(String category) {
+    if (_activeCategory == category) return;
+    
+    _activeCategory = category;
+    _searchQuery = ''; 
+    // Memuat data baru dari API berdasarkan kategori yang dipilih
+    loadRecipes(); 
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners(); 
+  }
+
+  // Fungsi Detail Loader
+  Future<Recipe> getRecipeWithDetails(String key) async {
+    Recipe minimalRecipe;
+    
+    // 1. Dapatkan objek resep minimal (dari list yang sedang tampil atau favorit)
+    try {
+      minimalRecipe = _recipes.firstWhere((r) => r.key == key);
+    } catch (_) {
+       if (_favoriteRecipes.containsKey(key)) {
+        minimalRecipe = _favoriteRecipes[key]!;
+      } else {
+        throw Exception("Recipe object not found for key: $key. Cannot fetch details.");
+      }
+    }
+    
+    // 2. Fetch detail lengkap dari API
+    final detailJson = await _recipeService.fetchRecipeDetails(key);
+    
+    // 3. Return objek resep yang diperbarui
+    return minimalRecipe.copyWithDetail(detailJson);
   }
 }

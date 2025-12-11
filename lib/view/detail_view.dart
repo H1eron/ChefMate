@@ -3,12 +3,10 @@ import 'package:provider/provider.dart';
 import '../models/recipe.dart';
 import '../viewmodel/fetchrecipe.dart';
 
-// Ganti StatelessWidget menjadi StatefulWidget untuk memuat detail
 class DetailView extends StatefulWidget { 
   final Recipe recipe;
   const DetailView({super.key, required this.recipe});
   
-  // Tambahkan getter untuk key
   String get recipeKey => recipe.key;
 
   @override
@@ -20,7 +18,6 @@ class _DetailViewState extends State<DetailView> {
   final darkCardColor = const Color(0xFF2C2C2C);
   final darkBgColor = const Color(0xFF1B1B1B);
 
-  // Menyimpan data resep lengkap setelah dimuat
   Recipe? _detailedRecipe;
 
   @override
@@ -29,14 +26,10 @@ class _DetailViewState extends State<DetailView> {
     _loadRecipeDetails();
   }
 
-  // Fungsi untuk memuat detail resep dari ViewModel
   Future<void> _loadRecipeDetails() async {
-    // Gunakan listen: false karena ini di dalam initState
     final viewmodel = Provider.of<FetchRecipe>(context, listen: false); 
-    // Menggunakan key untuk mengambil detail lengkap
     final fullRecipe = await viewmodel.getRecipeWithDetails(widget.recipeKey); 
     
-    // Periksa apakah widget masih mounted sebelum memanggil setState
     if(mounted) {
       setState(() {
         _detailedRecipe = fullRecipe;
@@ -46,12 +39,10 @@ class _DetailViewState extends State<DetailView> {
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan _detailedRecipe jika sudah dimuat, jika tidak, gunakan data dasar.
     final recipeToShow = _detailedRecipe ?? widget.recipe;
     final viewmodel = Provider.of<FetchRecipe>(context);
     bool isFav = viewmodel.isFavorite(recipeToShow.key);
     
-    // Tampilkan loading jika detail belum dimuat (description kosong/null)
     if (_detailedRecipe == null || recipeToShow.description == null || recipeToShow.description!.isEmpty) {
       return Scaffold(
         backgroundColor: darkBgColor,
@@ -60,8 +51,8 @@ class _DetailViewState extends State<DetailView> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(color: orangeColor),
-              SizedBox(height: 16),
-              Text('Memuat detail resep...', style: TextStyle(color: Colors.white)),
+              const SizedBox(height: 16),
+              const Text('Memuat detail resep...', style: TextStyle(color: Colors.white)),
             ],
           ),
         ),
@@ -74,7 +65,6 @@ class _DetailViewState extends State<DetailView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Kirim semua data yang diperlukan ke header
             _buildImageHeader(context, viewmodel, isFav, recipeToShow.imageUrl, recipeToShow.key), 
             
             Padding(
@@ -82,7 +72,7 @@ class _DetailViewState extends State<DetailView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildRecipeInfo(recipeToShow),
+                  _buildRecipeInfo(recipeToShow), 
                   const SizedBox(height: 24),
                   _buildIngredientsList(recipeToShow), 
                   const SizedBox(height: 24),
@@ -100,7 +90,7 @@ class _DetailViewState extends State<DetailView> {
   Widget _buildImageHeader(BuildContext context, FetchRecipe viewmodel, bool isFav, String imageUrl, String recipeKey) {
     return Stack(
       children: [
-        Image.network( // Menggunakan Image.network
+        Image.network( 
           imageUrl,
           height: 300,
           width: double.infinity,
@@ -147,7 +137,7 @@ class _DetailViewState extends State<DetailView> {
               color: Colors.white,
               size: 30,
             ),
-            onPressed: () => viewmodel.toggleFavorite(recipeKey), // Gunakan key
+            onPressed: () => viewmodel.toggleFavorite(recipeKey), 
           ),
         ),
       ],
@@ -173,38 +163,15 @@ class _DetailViewState extends State<DetailView> {
                   style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
-              // Label Kesulitan
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  recipeToShow.difficulty,
-                  style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
+              // Label Difficulty telah dihapus
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            // Gunakan description dari data detail
             recipeToShow.description ?? 'Deskripsi tidak tersedia.',
             style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(Icons.access_time, color: orangeColor, size: 20),
-              const SizedBox(width: 4),
-              Text(recipeToShow.duration, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              const SizedBox(width: 20),
-              Icon(Icons.people, color: orangeColor, size: 20),
-              const SizedBox(width: 4),
-              Text(recipeToShow.servings, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ],
-          ),
+          // Row Durasi dan Porsi telah dihapus
         ],
       ),
     );
@@ -231,7 +198,6 @@ class _DetailViewState extends State<DetailView> {
             ],
           ),
           const Divider(color: Colors.grey, height: 20),
-          // Daftar Bahan (List<String>)
           if (recipeToShow.ingredients.isEmpty) 
             const Text('Bahan belum dimuat atau tidak tersedia.', style: TextStyle(color: Colors.white70)),
           
@@ -243,7 +209,6 @@ class _DetailViewState extends State<DetailView> {
                 Text("• ", style: TextStyle(color: orangeColor, fontSize: 18)),
                 Expanded(
                   child: Text(
-                    // String sudah diformat dari API
                     ing, 
                     style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
@@ -274,13 +239,9 @@ class _DetailViewState extends State<DetailView> {
           if (recipeToShow.steps.isEmpty) 
             const Text('Langkah-langkah belum dimuat atau tidak tersedia.', style: TextStyle(color: Colors.white70)),
             
-          // Daftar Langkah (List<String>)
           ...recipeToShow.steps.asMap().entries.map((entry) {
             String step = entry.value;
-
-            // Cek apakah step sudah diawali dengan penomoran dari API (misalnya "1. ")
             bool isNumbered = RegExp(r'^\d+\.?\s').hasMatch(step.trim());
-            // Jika belum ada nomor dari API, tambahkan secara manual
             String stepText = isNumbered ? step.trim() : "${entry.key + 1}. ${step.trim()}";
 
             return Padding(
@@ -290,7 +251,7 @@ class _DetailViewState extends State<DetailView> {
                 children: [
                   Expanded(
                     child: Text(
-                      stepText, // Tampilkan teks langkah yang sudah diformat
+                      stepText, 
                       style: const TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ),

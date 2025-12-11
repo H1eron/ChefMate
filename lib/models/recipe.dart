@@ -1,18 +1,17 @@
 import 'dart:convert';
 class Recipe {
-  // Mengganti 'id' (int) dengan 'key' (String) dari API sebagai ID unik
+  // Menggunakan idMeal dari TheMealDB sebagai key
   final String key; 
   final String title;
-  // Menggunakan String? karena kategori tidak tersedia di endpoint list API
+  // strCategory dari TheMealDB
   final String? category; 
-  // Menggunakan String? karena deskripsi hanya tersedia di endpoint detail
+  // strInstructions yang disingkat dari TheMealDB akan menjadi description
   final String? description; 
-  // Sekarang berupa URL gambar dari API, bukan path asset lokal
+  // strMealThumb dari TheMealDB
   final String imageUrl;
-  final String duration;
-  final String servings;
-  final String difficulty;
-  // Menggunakan List<String> karena API detail mengembalikan ingredients dan steps dalam bentuk string siap pakai
+  
+  // Properti duration, servings, dan difficulty telah dihapus
+  
   final List<String> ingredients; 
   final List<String> steps;
 
@@ -22,50 +21,69 @@ class Recipe {
     this.category,
     this.description,
     required this.imageUrl,
-    required this.duration,
-    required this.servings,
-    required this.difficulty,
-    this.ingredients = const [], // Inisialisasi kosong
-    this.steps = const [], // Inisialisasi kosong
+    this.ingredients = const [], 
+    this.steps = const [], 
   });
 
-  // Factory constructor untuk memparsing data dari API list (/api/recipes)
+  // Factory constructor untuk memparsing data dari API list/search/filter
   factory Recipe.fromJsonList(Map<String, dynamic> json) {
+    final String idMeal = json['idMeal'] as String? ?? 'N/A';
+    final String strMeal = json['strMeal'] as String? ?? 'Nama Resep Tidak Tersedia';
+    // strCategory mungkin tidak ada di endpoint filter, gunakan default
+    final String strCategory = json['strCategory'] as String? ?? 'Umum'; 
+    final String strMealThumb = json['strMealThumb'] as String? ?? 
+        'https://via.placeholder.com/150';
+
     return Recipe(
-      key: json['key'] as String,
-      title: json['title'] as String,
-      // API list tidak menyediakan kategori. Kita gunakan nilai default/placeholder.
-      category: json['difficulty'] as String? ?? 'Umum', 
-      // Menggunakan 'thumb' dari API
-      imageUrl: json.containsKey('thumb') && json['thumb'] != null 
-          ? json['thumb'] as String 
-          : 'https://via.placeholder.com/150', // Placeholder jika thumb null
-      duration: json['times'] as String? ?? 'N/A', // Menggunakan 'times' dari API
-      servings: json['serving'] as String? ?? 'N/A', // Menggunakan 'serving' dari API
-      difficulty: json['difficulty'] as String? ?? 'N/A',
+      key: idMeal,
+      title: strMeal,
+      category: strCategory.isNotEmpty ? strCategory : 'Umum', 
+      imageUrl: strMealThumb, 
       ingredients: [],
       steps: [], 
     );
   }
   
-  // Method untuk memperbarui objek Recipe dengan detail dari API detail (/api/recipe/:key)
+  // Method untuk memperbarui objek Recipe dengan detail dari API lookup (lookup.php?i=...)
   Recipe copyWithDetail(Map<String, dynamic> detailJson) {
-    List<String> ingredients = List<String>.from(detailJson['ingredient'] ?? []);
-    List<String> steps = List<String>.from(detailJson['step'] ?? []);
+    // 1. Ambil instruksi (strInstructions)
+    final String instructions = detailJson['strInstructions'] as String? ?? 'Instruksi tidak tersedia.';
+
+    // 2. Buat daftar bahan (ingredients)
+    List<String> ingredientsList = [];
+    for (int i = 1; i <= 20; i++) {
+        final ingredient = detailJson['strIngredient$i'] as String?;
+        final measure = detailJson['strMeasure$i'] as String?;
+
+        if (ingredient != null && ingredient.isNotEmpty) {
+            final formattedIngredient = measure != null && measure.isNotEmpty && measure.trim() != '-'
+                ? "${measure.trim()} ${ingredient.trim()}"
+                : ingredient.trim();
+            ingredientsList.add(formattedIngredient);
+        }
+    }
+    
+    // 3. Pisahkan instruksi (strInstructions) menjadi langkah-langkah (steps)
+    List<String> stepsList = instructions
+        .split(RegExp(r'[\r\n]+')) 
+        .map((step) => step.trim())
+        .where((step) => step.isNotEmpty)
+        .toList();
+
+    // 4. Buat deskripsi singkat dari instruksi
+    String shortDescription = instructions.substring(0, instructions.length.clamp(0, 300));
+    if (instructions.length > 300) {
+      shortDescription += '...';
+    }
 
     return Recipe(
       key: key,
       title: title,
-      category: category,
-      description: detailJson['desc'] as String? ?? this.description, // Menggunakan 'desc' dari API
-      imageUrl: detailJson['thumb'] as String? ?? this.imageUrl, 
-      duration: detailJson['times'] as String? ?? this.duration, 
-      servings: detailJson['servings'] as String? ?? this.servings,
-      difficulty: detailJson['difficulty'] as String? ?? this.difficulty,
-      ingredients: ingredients,
-      steps: steps,
+      category: detailJson['strCategory'] as String? ?? this.category,
+      description: shortDescription,
+      imageUrl: detailJson['strMealThumb'] as String? ?? this.imageUrl, 
+      ingredients: ingredientsList,
+      steps: stepsList,
     );
   }
 }
-
-// Hapus list dummyRecipes di sini.

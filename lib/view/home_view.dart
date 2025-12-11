@@ -15,6 +15,15 @@ class _HomeViewState extends State<HomeView> {
   final orangeColor = const Color(0xFFE55800);
   
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Panggil loadRecipes saat pertama kali view dimuat
+      Provider.of<FetchRecipe>(context, listen: false).loadRecipes();
+    });
+  }
+  
+  @override
   void dispose() {
     _searchController.dispose(); 
     super.dispose();
@@ -54,9 +63,11 @@ class _HomeViewState extends State<HomeView> {
 
                   recipeProvider.isLoading
                       ? const Center(child: CircularProgressIndicator(color: Colors.orange))
-                      : Column(
-                          children: recipes.map((recipe) => RecipeCard(recipe: recipe, viewmodel: recipeProvider)).toList(),
-                        ),
+                      : (recipes.isEmpty && !recipeProvider.isLoading && recipeProvider.activeCategory != '')
+                        ? _buildErrorState(recipeProvider) 
+                        : Column(
+                            children: recipes.map((recipe) => RecipeCard(recipe: recipe, viewmodel: recipeProvider)).toList(),
+                          ),
                 ],
               ),
             ),
@@ -89,7 +100,7 @@ class _HomeViewState extends State<HomeView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text("ChefMate", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text("Jelajahi cita rasa Indonesia", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text("Jelajahi cita rasa Dunia", style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
             ],
@@ -106,7 +117,7 @@ class _HomeViewState extends State<HomeView> {
               controller: _searchController,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                hintText: "Cari resep favorit...",
+                hintText: "Cari resep yang diinginkan...",
                 hintStyle: TextStyle(color: Colors.grey),
                 border: InputBorder.none,
                 prefixIcon: Icon(Icons.search, color: Colors.grey),
@@ -122,7 +133,8 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildCategoryList(BuildContext context) {
-    final categories = ["Semua", "Makanan Utama", "Berkuah", "Cemilan", "Minuman"];
+    // Kategori dari TheMealDB
+    final categories = ["Semua", "Beef", "Chicken", "Dessert", "Side", "Pasta"];
     final viewmodel = Provider.of<FetchRecipe>(context);
 
     return SizedBox(
@@ -152,6 +164,34 @@ class _HomeViewState extends State<HomeView> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildErrorState(FetchRecipe viewmodel) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 100),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off, color: Colors.grey, size: 50),
+            const SizedBox(height: 16),
+            Text("Tidak ada resep untuk kategori ${viewmodel.activeCategory}", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+            const SizedBox(height: 8),
+            Text(
+              "Coba ganti kategori atau periksa koneksi internet Anda.",
+              style: TextStyle(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => viewmodel.loadRecipes(),
+              style: ElevatedButton.styleFrom(backgroundColor: orangeColor),
+              child: const Text("Coba Lagi"),
+            ),
+          ],
+        ),
       ),
     );
   }
