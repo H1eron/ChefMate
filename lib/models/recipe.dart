@@ -1,4 +1,3 @@
-import 'dart:convert';
 class Recipe {
   // Menggunakan idMeal dari TheMealDB sebagai key
   final String key; 
